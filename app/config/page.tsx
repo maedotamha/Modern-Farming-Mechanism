@@ -1,38 +1,46 @@
 "use client";
 
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Umbrella, Cpu, MapPin, Sprout } from 'lucide-react';
-import type { PlantConfig } from '@/lib/types';
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Umbrella, Cpu, MapPin, Sprout } from "lucide-react";
+import type { PlantConfig } from "@/lib/types";
+
+export const exportedValues = {
+  location: "",
+  name: "",
+};
 
 export default function ConfigPage() {
   const [config, setConfig] = useState<PlantConfig>({
-    name: '',
-    location: '',
-    portNumber: '',
-    coverSchedule: {
-      startDelay: 30,
-      duration: 2
-    },
+    name: "",
+    location: "",
+    rowNumber: "",
     pumpSchedule: {
       startDelay: 30,
-      duration: 2
-    }
+      duration: 2,
+    },
   });
+
+  const [savedConfig, setSavedConfig] = useState<PlantConfig | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle config submission
-    console.log('Config submitted:', config);
+    setSavedConfig(config);
+
+    // Update exported values
+    exportedValues.location = config.location;
+    exportedValues.name = config.name;
+
+    console.log("Config submitted:", config);
   };
 
   return (
     <div className="p-6 space-y-6">
       <div className="relative h-48 rounded-xl overflow-hidden mb-8">
-        <img 
+        <img
           src="https://images.unsplash.com/photo-1595074475099-3d0066f7fc86?auto=format&fit=crop&q=80"
           alt="Hydroponic Setup"
           className="w-full h-full object-cover"
@@ -40,49 +48,37 @@ export default function ConfigPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-green-900/80 to-transparent flex items-center">
           <div className="p-8">
             <h1 className="text-3xl font-bold text-white mb-2">System Configuration</h1>
-            <p className="text-green-50">Manage your hydroponic system settings</p>
+            <p className="text-green-50">Manage your Farm system settings</p>
           </div>
         </div>
       </div>
+      {savedConfig && (
+        <Card className="p-4 bg-green-50 dark:bg-green-900/20">
+          <h2 className="text-xl font-semibold mb-4">Saved Configuration:</h2>
+          <ul className="space-y-2">
+            <li>
+              <strong>Plant Name:</strong> {savedConfig.name}
+            </li>
+            <li>
+              <strong>Location:</strong> {savedConfig.location}
+            </li>
+            <li>
+              <strong>Row Number:</strong> {savedConfig.rowNumber}
+            </li>
+            <li>
+              <strong>Pump Start Delay:</strong> {savedConfig.pumpSchedule.startDelay} minutes
+            </li>
+            <li>
+              <strong>Pump Duration:</strong> {savedConfig.pumpSchedule.duration} minutes
+            </li>
+          </ul>
+        </Card>
+      )}
+
+      
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="p-6">
-            <div className="flex items-center space-x-3 mb-6">
-              <Umbrella className="h-6 w-6 text-green-600" />
-              <h3 className="text-xl font-semibold">Cover Control</h3>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <Label>Start Delay (minutes)</Label>
-                <Input
-                  type="number"
-                  value={config.coverSchedule.startDelay}
-                  onChange={(e) => setConfig({
-                    ...config,
-                    coverSchedule: {
-                      ...config.coverSchedule,
-                      startDelay: parseInt(e.target.value)
-                    }
-                  })}
-                />
-              </div>
-              <div>
-                <Label>Duration (hours)</Label>
-                <Input
-                  type="number"
-                  value={config.coverSchedule.duration}
-                  onChange={(e) => setConfig({
-                    ...config,
-                    coverSchedule: {
-                      ...config.coverSchedule,
-                      duration: parseInt(e.target.value)
-                    }
-                  })}
-                />
-              </div>
-            </div>
-          </Card>
 
           <Card className="p-6">
             <div className="flex items-center space-x-3 mb-6">
@@ -95,13 +91,15 @@ export default function ConfigPage() {
                 <Input
                   type="number"
                   value={config.pumpSchedule.startDelay}
-                  onChange={(e) => setConfig({
-                    ...config,
-                    pumpSchedule: {
-                      ...config.pumpSchedule,
-                      startDelay: parseInt(e.target.value)
-                    }
-                  })}
+                  onChange={(e) =>
+                    setConfig({
+                      ...config,
+                      pumpSchedule: {
+                        ...config.pumpSchedule,
+                        startDelay: parseInt(e.target.value),
+                      },
+                    })
+                  }
                 />
               </div>
               <div>
@@ -109,13 +107,15 @@ export default function ConfigPage() {
                 <Input
                   type="number"
                   value={config.pumpSchedule.duration}
-                  onChange={(e) => setConfig({
-                    ...config,
-                    pumpSchedule: {
-                      ...config.pumpSchedule,
-                      duration: parseInt(e.target.value)
-                    }
-                  })}
+                  onChange={(e) =>
+                    setConfig({
+                      ...config,
+                      pumpSchedule: {
+                        ...config.pumpSchedule,
+                        duration: parseInt(e.target.value),
+                      },
+                    })
+                  }
                 />
               </div>
             </div>
@@ -143,18 +143,18 @@ export default function ConfigPage() {
               <Input
                 value={config.location}
                 onChange={(e) => setConfig({ ...config, location: e.target.value })}
-                placeholder="e.g., Greenhouse 1"
+                placeholder="e.g., Addis Abeba"
               />
             </div>
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Cpu className="h-5 w-5 text-green-600" />
-                <Label>Port Number</Label>
+                <Label>Row Number</Label>
               </div>
               <Input
-                value={config.portNumber}
-                onChange={(e) => setConfig({ ...config, portNumber: e.target.value })}
-                placeholder="e.g., COM3"
+                value={config.rowNumber}
+                onChange={(e) => setConfig({ ...config, rowNumber: e.target.value })}
+                placeholder="e.g., row 1"
               />
             </div>
           </div>

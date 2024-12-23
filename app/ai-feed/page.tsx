@@ -1,39 +1,62 @@
 "use client";
 
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Brain, Plant, Droplet, ThermometerSun } from 'lucide-react';
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Brain, Droplet, ThermometerSun } from "lucide-react";
 
 export default function AIFeedPage() {
   const [suggestions] = useState([
     {
       id: 1,
-      title: 'Optimal Growing Conditions',
-      description: 'Based on current temperature and humidity levels, consider adjusting the cover schedule to maintain optimal growing conditions.',
+      title: "Optimal Growing Conditions",
+      description:
+        "Based on current temperature and humidity levels, consider adjusting the cover schedule to maintain optimal growing conditions.",
       icon: ThermometerSun,
-      type: 'environment'
+      type: "environment",
     },
     {
       id: 2,
-      title: 'Water Management',
-      description: 'Water levels are slightly below optimal. Consider increasing pump duration by 10 minutes.',
+      title: "Water Management",
+      description: "Water levels are slightly below optimal. Consider increasing pump duration by 10 minutes.",
       icon: Droplet,
-      type: 'water'
+      type: "water",
     },
     {
       id: 3,
-      title: 'Plant Health',
-      description: 'Plant growth rate is within expected range. Continue current nutrient schedule.',
-      icon: Plant,
-      type: 'health'
-    }
+      title: "Plant Health",
+      description: "Plant growth rate is within expected range. Continue current nutrient schedule.",
+      icon: Droplet,
+      type: "health",
+    },
   ]);
+
+  const [userInput, setUserInput] = useState("");
+  const [aiResponse, setAIResponse] = useState("");
+
+  const handleAIQuery = async () => {
+    if (!userInput.trim()) return;
+
+    try {
+      const response = await fetch("/api/ai-query", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question: userInput }),
+      });
+      const data = await response.json();
+      setAIResponse(data.answer || "No response from AI.");
+    } catch (error) {
+      console.error("AI Query Error:", error);
+      setAIResponse("Error fetching AI response. Please try again later.");
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
       <div className="relative h-48 rounded-xl overflow-hidden mb-8">
-        <img 
+        <img
           src="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&q=80"
           alt="Hydroponic Farm"
           className="w-full h-full object-cover"
@@ -72,16 +95,26 @@ export default function AIFeedPage() {
           </div>
           <div>
             <h3 className="font-semibold">AI Assistant</h3>
-            <p className="text-sm text-muted-foreground">Ask me anything about your hydroponic system</p>
+            <p className="text-sm text-muted-foreground">Ask me anything about your Farm system</p>
           </div>
         </div>
-        <div className="flex space-x-2">
-          <input
-            type="text"
-            placeholder="Type your question here..."
-            className="flex-1 rounded-lg border border-input bg-background px-3 py-2"
-          />
-          <Button>Ask AI</Button>
+        <div className="space-y-4">
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              placeholder="Type your question here..."
+              className="flex-1 rounded-lg border border-input bg-background px-3 py-2"
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+            />
+            <Button onClick={handleAIQuery}>Ask AI</Button>
+          </div>
+          {aiResponse && (
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+              <h4 className="font-semibold">AI Response:</h4>
+              <p className="text-sm">{aiResponse}</p>
+            </div>
+          )}
         </div>
       </Card>
     </div>
