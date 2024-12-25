@@ -8,11 +8,7 @@ export interface WeatherData {
 export interface PlantConfig {
   name: string;
   location: string;
-  portNumber: string;
-  coverSchedule: {
-    startDelay: number;
-    duration: number;
-  };
+  rowNumber: string;
   pumpSchedule: {
     startDelay: number;
     duration: number;
@@ -22,8 +18,6 @@ export interface PlantConfig {
 export interface SystemStatus {
   temperature: number;
   humidity: number;
-  sunlight: number;
   waterLevel: number;
-  coverStatus: 'open' | 'closed';
   pumpStatus: 'on' | 'off';
 }
