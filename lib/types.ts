@@ -16,6 +16,8 @@ export interface PlantConfig {
 }
 
 export interface SystemStatus {
+  farmA: any;
+  farmB: any;
   temperature: number;
   humidity: number;
   waterLevel: number;
