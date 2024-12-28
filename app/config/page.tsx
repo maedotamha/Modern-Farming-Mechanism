@@ -38,7 +38,9 @@ async function sendToBluetoothModule(config: PumpConfig) {
       acceptAllDevices: true,
       optionalServices: ["serial"], // Replace with the actual service UUID of your device
     });
-
+    if (!device.gatt) {
+      throw new Error("Device GATT is not available.");
+    }
     // Connect to the device
     const server = await device.gatt.connect();
     console.log("Connected to Bluetooth device.");

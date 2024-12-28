@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Brain, Droplet, ThermometerSun, Leaf } from "lucide-react";
 import { useGlobalConfig } from "@/app/config/globalConfig";
-import Image from "next/image";
 
 interface Suggestion {
   id: number;

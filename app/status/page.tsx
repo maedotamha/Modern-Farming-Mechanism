@@ -38,7 +38,9 @@ export default function StatusPage() {
         acceptAllDevices: true,
         optionalServices: ["serial"],
       });
-
+      if (!device.gatt) {
+        throw new Error("Device GATT is not available.");
+      }
       const server = await device.gatt.connect();
       const service = await server.getPrimaryService("serial");
       const characteristic = await service.getCharacteristic("serial_characteristic");
