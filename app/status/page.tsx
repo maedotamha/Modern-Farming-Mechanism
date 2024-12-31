@@ -36,14 +36,14 @@ export default function StatusPage() {
       // Request connection to the Bluetooth device
       const device = await navigator.bluetooth.requestDevice({
         acceptAllDevices: true,
-        optionalServices: ["serial"],
+        optionalServices: [0x1101],
       });
       if (!device.gatt) {
         throw new Error("Device GATT is not available.");
       }
       const server = await device.gatt.connect();
-      const service = await server.getPrimaryService("serial");
-      const characteristic = await service.getCharacteristic("serial_characteristic");
+      const service = await server.getPrimaryService(0x1101);
+      const characteristic = await service.getCharacteristic(0x1101);
 
       // Send a request to fetch the status
       const encoder = new TextEncoder();

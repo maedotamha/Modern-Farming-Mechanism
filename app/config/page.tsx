@@ -36,7 +36,7 @@ async function sendToBluetoothModule(config: PumpConfig) {
     // Request a Bluetooth device
     const device = await navigator.bluetooth.requestDevice({
       acceptAllDevices: true,
-      optionalServices: ["serial"], // Replace with the actual service UUID of your device
+      optionalServices: [0x1101], // Replace with the actual service UUID of your device
     });
     if (!device.gatt) {
       throw new Error("Device GATT is not available.");
@@ -46,13 +46,11 @@ async function sendToBluetoothModule(config: PumpConfig) {
     console.log("Connected to Bluetooth device.");
 
     // Get the service
-    const service = await server.getPrimaryService("serial"); // Replace with the correct service UUID
+    const service = await server.getPrimaryService(0x1101); // Replace with the correct service UUID
     console.log("Obtained Bluetooth service.");
 
     // Get the characteristic
-    const characteristic = await service.getCharacteristic(
-      "serial_characteristic"
-    ); // Replace with the correct characteristic UUID
+    const characteristic = await service.getCharacteristic( 0x1101 ); // Replace with the correct characteristic UUID
     console.log("Obtained Bluetooth characteristic.");
 
     // Convert the config data to JSON and send it as a buffer

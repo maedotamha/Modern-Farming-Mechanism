@@ -15,15 +15,15 @@ export default function ControlPage() {
 
       const device = await navigator.bluetooth.requestDevice({
         acceptAllDevices: true,
-        optionalServices: ["serial"], // Replace with your service UUID
+        optionalServices: [0x1101], // Replace with your service UUID
       });
       
       if (!device.gatt) {
         throw new Error("Device GATT is not available.");
       }
       const server = await device.gatt.connect();
-      const service = await server.getPrimaryService("serial"); // Replace UUID
-      const characteristic = await service.getCharacteristic("serial_characteristic"); // Replace UUID
+      const service = await server.getPrimaryService(0x1101); // Replace UUID
+      const characteristic = await service.getCharacteristic(0x1101); // Replace UUID
 
       const encoder = new TextEncoder();
       await characteristic.writeValue(encoder.encode(status));
