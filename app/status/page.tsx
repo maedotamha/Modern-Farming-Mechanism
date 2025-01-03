@@ -9,7 +9,7 @@ export default function StatusPage() {
   const [systemStatus, setSystemStatus] = useState({
     farmA: { current: 0, ideal: 60, pump: false },
     farmB: { current: 0, ideal: 70, pump: false },
-    environment: { temperature: 0, humidity: 0, isRaining: false },
+    environment: { temperature: 25, humidity: 65, isRaining: false },
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +26,42 @@ export default function StatusPage() {
     return () => clearInterval(interval);
   }, []);
 
+  const generateMockData = () => {
+    const randomTemperatureChange = parseFloat(
+      (Math.random() * 2 - 1).toFixed(1)
+    ); // Small variation
+    const randomHumidityChange = Math.floor(Math.random() * 3 - 1); 
+
+    return {
+      farmA: {
+        current: Math.floor(Math.random() * 100),
+        ideal: 60,
+        pump: Math.random() < 0.5,
+      },
+      farmB: {
+        current: Math.floor(Math.random() * 100),
+        ideal: 70,
+        pump: Math.random() < 0.5,
+      },
+      environment: {
+        temperature: parseFloat(
+          Math.min(
+            30,
+            Math.max(
+              20,
+              systemStatus.environment.temperature + randomTemperatureChange
+            )
+          ).toFixed(1)
+        ),
+        humidity: Math.min(
+          70,
+          Math.max(60, systemStatus.environment.humidity + randomHumidityChange)
+        ),
+        isRaining: false, // Always Clear
+      },
+    };
+  };
+
   const fetchSystemStatus = async () => {
     setError(null); // Clear previous errors
     setLoading(true);
@@ -33,73 +69,24 @@ export default function StatusPage() {
     try {
       console.log("Fetching system status...");
 
-      // Request connection to the Bluetooth device
-      const device = await navigator.bluetooth.requestDevice({
-        acceptAllDevices: true,
-        optionalServices: [0x1101],
-      });
-      if (!device.gatt) {
-        throw new Error("Device GATT is not available.");
-      }
-      const server = await device.gatt.connect();
-      const service = await server.getPrimaryService(0x1101);
-      const characteristic = await service.getCharacteristic(0x1101);
+      // Simulated API call or mock data
+      const mockData = generateMockData();
 
-      // Send a request to fetch the status
-      const encoder = new TextEncoder();
-      await characteristic.writeValue(encoder.encode("STATUS"));
+      // Simulate network delay
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Read and decode the response
-      const response = await characteristic.readValue();
-      const decoder = new TextDecoder();
-      const statusData = decoder.decode(response);
-      console.log("Received system status:", statusData);
+      // Save to local storage
+      localStorage.setItem("systemStatus", JSON.stringify(mockData));
+      console.log("System status saved to local storage:", mockData);
 
-      // Parse the response
-      const parsedStatus = parseStatusData(statusData);
-      if (parsedStatus) {
-        // Save to local storage
-        localStorage.setItem("systemStatus", JSON.stringify(parsedStatus));
-        console.log("System status saved to local storage:", parsedStatus);
-
-        // Update state
-        setSystemStatus(parsedStatus);
-      }
+      // Update state
+      setSystemStatus(mockData);
     } catch (error) {
       setError("Failed to fetch system status. Please try again.");
       console.error("Error fetching system status:", error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const parseStatusData = (data: string) => {
-    // Parsing multiple farm data and environmental details
-    const statusRegex = /<STATUS:A:(\d+):(\d+):(\d+):B:(\d+):(\d+):(\d+):(\d+):(\d+):(\d+)>/;
-    const match = data.match(statusRegex);
-
-    if (!match) {
-      console.error("Invalid data format:", data);
-      return null;
-    }
-
-    return {
-      farmA: {
-        current: parseInt(match[1], 10),
-        ideal: parseInt(match[2], 10),
-        pump: Boolean(parseInt(match[3], 10)),
-      },
-      farmB: {
-        current: parseInt(match[4], 10),
-        ideal: parseInt(match[5], 10),
-        pump: Boolean(parseInt(match[6], 10)),
-      },
-      environment: {
-        temperature: parseFloat(match[7]),
-        humidity: parseFloat(match[8]),
-        isRaining: Boolean(parseInt(match[9], 10)),
-      },
-    };
   };
 
   const handleFetchStatus = async () => {
@@ -116,7 +103,9 @@ export default function StatusPage() {
 
       <button
         onClick={handleFetchStatus}
-        className={`px-4 py-2 rounded ${loading ? "bg-gray-300" : "bg-blue-600 text-white"} hover:bg-blue-700`}
+        className={`px-4 py-2 rounded ${
+          loading ? "bg-gray-300" : "bg-blue-600 text-white"
+        } hover:bg-blue-700`}
         disabled={loading}
       >
         {loading ? "Loading..." : "Fetch System Status"}
@@ -137,9 +126,9 @@ export default function StatusPage() {
         />
         <StatusCard
           title="Rain Status"
-          value={systemStatus.environment.isRaining ? "Raining" : "Clear"}
+          value="Clear" // Always Clear
           icon={Sun}
-          color={systemStatus.environment.isRaining ? "bg-gray-100 text-gray-600" : "bg-yellow-100 text-yellow-600"}
+          color="bg-yellow-100 text-yellow-600"
         />
       </div>
 

@@ -24,12 +24,12 @@ const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'Control', href: '/control', icon: Sliders },
-    { name: 'Status', href: '/status', icon: Activity },
-    { name: 'Notification', href: '/notification', icon: Bell },
-    { name: 'AI Feed', href: '/ai-feed', icon: Brain },
-    { name: 'Config', href: '/config', icon: Settings },
+    { name: "Dashboard", href: "/", icon: LayoutDashboard },
+    { name: "Status", href: "/status", icon: Activity },
+    { name: "Notification", href: "/notification", icon: Bell },
+    { name: "AI Feed", href: "/ai-feed", icon: Brain },
+    { name: "Config", href: "/config", icon: Settings },
+    { name: "Information", href: "/control", icon: Sliders },
   ];
 
   return (
