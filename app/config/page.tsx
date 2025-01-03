@@ -1,12 +1,9 @@
 "use client";
-/// <reference types="web-bluetooth" />
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Cpu, MapPin } from "lucide-react";
 import { useGlobalConfig, updateGlobalConfig } from "./globalConfig";
 
 interface PumpConfig {
@@ -18,52 +15,8 @@ interface PumpConfig {
   soilTypeA: string;
   soilTypeB: string;
   altitudeA: number;
-  altitudeB: number;
   cropTypeA: string;
   cropTypeB: string;
-}
-
-async function sendToBluetoothModule(config: PumpConfig) {
-  try {
-    // Extract only the required fields for Bluetooth
-    const bluetoothConfig = {
-      idealMoistureA: config.idealMoistureA,
-      idealMoistureB: config.idealMoistureB,
-    };
-
-    console.log("Preparing to send to Bluetooth:", bluetoothConfig);
-
-    // Request a Bluetooth device
-    const device = await navigator.bluetooth.requestDevice({
-      acceptAllDevices: true,
-      optionalServices: [0x1101], // Replace with the actual service UUID of your device
-    });
-    if (!device.gatt) {
-      throw new Error("Device GATT is not available.");
-    }
-    // Connect to the device
-    const server = await device.gatt.connect();
-    console.log("Connected to Bluetooth device.");
-
-    // Get the service
-    const service = await server.getPrimaryService(0x1101); // Replace with the correct service UUID
-    console.log("Obtained Bluetooth service.");
-
-    // Get the characteristic
-    const characteristic = await service.getCharacteristic( 0x1101 ); // Replace with the correct characteristic UUID
-    console.log("Obtained Bluetooth characteristic.");
-
-    // Convert the config data to JSON and send it as a buffer
-    const configData = JSON.stringify(bluetoothConfig);
-    const encoder = new TextEncoder();
-    const dataBuffer = encoder.encode(configData);
-
-    // Write data to the characteristic
-    await characteristic.writeValue(dataBuffer);
-    console.log("Configuration sent to Bluetooth module:", bluetoothConfig);
-  } catch (error) {
-    console.error("Error sending configuration to Bluetooth:", error);
-  }
 }
 
 export default function ConfigPage() {
@@ -73,6 +26,7 @@ export default function ConfigPage() {
   });
 
   const [warning, setWarning] = useState<string | null>(null);
+  const [success, setSuccess] = useState<boolean>(false); // Track if the configuration was successfully saved
 
   const validateConfig = (): boolean => {
     const {
@@ -82,7 +36,6 @@ export default function ConfigPage() {
       cropNameB,
       location,
       altitudeA,
-      altitudeB,
     } = config;
     if (
       idealMoistureA < 0 ||
@@ -91,18 +44,14 @@ export default function ConfigPage() {
       idealMoistureB > 100
     ) {
       setWarning("Ideal moisture must be between 0 and 100.");
+      setSuccess(false);
       return false;
     }
-    if (
-      !cropNameA ||
-      !cropNameB ||
-      !location ||
-      altitudeA < 0 ||
-      altitudeB < 0
-    ) {
+    if (!cropNameA || !cropNameB || !location || altitudeA < 0) {
       setWarning(
         "Please fill in all required fields and ensure altitude values are non-negative."
       );
+      setSuccess(false);
       return false;
     }
     return true;
@@ -113,9 +62,9 @@ export default function ConfigPage() {
     if (!validateConfig()) return;
 
     setWarning(null);
+    setSuccess(true); // Indicate that the configuration has been successfully saved
     updateGlobalConfig(config); // Update global configuration state
-    sendToBluetoothModule(config); // Send the configuration to the Bluetooth module.
-    console.log("Config submitted:", config);
+    console.log("Config saved to global state:", config);
   };
 
   return (
@@ -126,6 +75,21 @@ export default function ConfigPage() {
         <div className="p-4 mb-4 text-red-700 bg-red-100 rounded-lg">
           <p>{warning}</p>
         </div>
+      )}
+
+      {success && (
+        <div className="p-4 mb-4 text-green-700 bg-green-100 rounded-lg">
+          <p>Configuration saved successfully!</p>
+        </div>
+      )}
+
+      {success && (
+        <Card className="p-4 mb-6 ">
+          <h2 className="text-lg font-semibold">Current Configuration</h2>
+          <pre className="text-sm md:text-base text-green-800 mt-4">
+            {JSON.stringify(globalConfig, null, 2)}
+          </pre>
+        </Card>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -164,19 +128,6 @@ export default function ConfigPage() {
                   value={config.soilTypeA}
                   onChange={(e) =>
                     setConfig({ ...config, soilTypeA: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label>Altitude (m)</Label>
-                <Input
-                  type="number"
-                  value={config.altitudeA||""}
-                  onChange={(e) =>
-                    setConfig({
-                      ...config,
-                      altitudeA: parseInt(e.target.value),
-                    })
                   }
                 />
               </div>
@@ -231,19 +182,6 @@ export default function ConfigPage() {
                 />
               </div>
               <div>
-                <Label>Altitude (m)</Label>
-                <Input
-                  type="number"
-                  value={config.altitudeB||""}
-                  onChange={(e) =>
-                    setConfig({
-                      ...config,
-                      altitudeB: parseInt(e.target.value),
-                    })
-                  }
-                />
-              </div>
-              <div>
                 <Label>Crop Type/Variety</Label>
                 <Input
                   type="text"
@@ -262,8 +200,21 @@ export default function ConfigPage() {
           <Input
             type="text"
             value={config.location}
-            onChange={(e) => setConfig({ ...config, location: e.target.value })}
+            onChange={(e) =>
+              setConfig({ ...config, location: e.target.value })
+            }
             placeholder="e.g., Addis Ababa"
+          />
+        </div>
+
+        <div>
+          <Label>Altitude (m)</Label>
+          <Input
+            type="number"
+            value={config.altitudeA || ""}
+            onChange={(e) =>
+              setConfig({ ...config, altitudeA: parseInt(e.target.value) })
+            }
           />
         </div>
 

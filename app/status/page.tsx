@@ -5,13 +5,27 @@ import { Card } from "@/components/ui/card";
 import StatusCard from "@/components/StatusCard";
 import { Thermometer, Droplets, Sun } from "lucide-react";
 
+interface FarmStatus {
+  current: number;
+  ideal: number;
+  pump: boolean;
+}
+
+interface EnvironmentStatus {
+  temperature: number;
+  humidity: number;
+  isRaining: boolean;
+}
+
+interface SystemStatus {
+  farmA: FarmStatus;
+  farmB: FarmStatus;
+  environment: EnvironmentStatus;
+}
+
 export default function StatusPage() {
-  const [systemStatus, setSystemStatus] = useState({
-    farmA: { current: 0, ideal: 60, pump: false },
-    farmB: { current: 0, ideal: 70, pump: false },
-    environment: { temperature: 25, humidity: 65, isRaining: false },
-  });
-  const [loading, setLoading] = useState(false);
+  const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -19,18 +33,21 @@ export default function StatusPage() {
     const savedStatus = localStorage.getItem("systemStatus");
     if (savedStatus) {
       setSystemStatus(JSON.parse(savedStatus));
+      setLoading(false);
+    } else {
+      fetchSystemStatus(true); // Pass true for the initial load
     }
 
     // Periodically fetch system status
-    const interval = setInterval(fetchSystemStatus, 10000); // Every 10 seconds
+    const interval = setInterval(fetchSystemStatus, 900000); // Every 10 seconds
     return () => clearInterval(interval);
   }, []);
 
-  const generateMockData = () => {
+  const generateMockData = (): SystemStatus => {
     const randomTemperatureChange = parseFloat(
-      (Math.random() * 2 - 1).toFixed(1)
-    ); // Small variation
-    const randomHumidityChange = Math.floor(Math.random() * 3 - 1); 
+      (Math.random() * 0.8 - 0.4).toFixed(1) // Variation of ±0.4°C
+    );
+    const randomHumidityChange = Math.floor(Math.random() * 3 - 1);
 
     return {
       farmA: {
@@ -49,20 +66,20 @@ export default function StatusPage() {
             30,
             Math.max(
               20,
-              systemStatus.environment.temperature + randomTemperatureChange
+              (systemStatus?.environment.temperature || 25) + randomTemperatureChange
             )
           ).toFixed(1)
         ),
         humidity: Math.min(
           70,
-          Math.max(60, systemStatus.environment.humidity + randomHumidityChange)
+          Math.max(60, (systemStatus?.environment.humidity || 65) + randomHumidityChange)
         ),
         isRaining: false, // Always Clear
       },
     };
   };
 
-  const fetchSystemStatus = async () => {
+  const fetchSystemStatus = async (isInitialLoad = false) => {
     setError(null); // Clear previous errors
     setLoading(true);
 
@@ -73,7 +90,8 @@ export default function StatusPage() {
       const mockData = generateMockData();
 
       // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const delay = isInitialLoad ? 9000000 : 500; // Longer delay for the first load
+      await new Promise((resolve) => setTimeout(resolve, delay));
 
       // Save to local storage
       localStorage.setItem("systemStatus", JSON.stringify(mockData));
@@ -90,9 +108,7 @@ export default function StatusPage() {
   };
 
   const handleFetchStatus = async () => {
-    setLoading(true);
     await fetchSystemStatus();
-    setLoading(false);
   };
 
   return (
@@ -111,44 +127,52 @@ export default function StatusPage() {
         {loading ? "Loading..." : "Fetch System Status"}
       </button>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-        <StatusCard
-          title="Temperature"
-          value={`${systemStatus.environment.temperature}°C`}
-          icon={Thermometer}
-          color="bg-blue-100 text-blue-600"
-        />
-        <StatusCard
-          title="Humidity"
-          value={`${systemStatus.environment.humidity}%`}
-          icon={Droplets}
-          color="bg-green-100 text-green-600"
-        />
-        <StatusCard
-          title="Rain Status"
-          value="Clear" // Always Clear
-          icon={Sun}
-          color="bg-yellow-100 text-yellow-600"
-        />
-      </div>
+      {loading ? (
+        <p>Loading system status...</p>
+      ) : (
+        systemStatus && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+              <StatusCard
+                title="Temperature"
+                value={`${systemStatus.environment.temperature}°C`}
+                icon={Thermometer}
+                color="bg-blue-100 text-blue-600"
+              />
+              <StatusCard
+                title="Humidity"
+                value={`${systemStatus.environment.humidity}%`}
+                icon={Droplets}
+                color="bg-green-100 text-green-600"
+              />
+              <StatusCard
+                title="Rain Status"
+                value="Clear" // Always Clear
+                icon={Sun}
+                color="bg-yellow-100 text-yellow-600"
+              />
+            </div>
 
-      <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Farm Status</h2>
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-lg font-semibold">Farm A</h3>
-            <p>Current Moisture: {systemStatus.farmA.current}%</p>
-            <p>Ideal Moisture: {systemStatus.farmA.ideal}%</p>
-            <p>Pump Status: {systemStatus.farmA.pump ? "On" : "Off"}</p>
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold">Farm B</h3>
-            <p>Current Moisture: {systemStatus.farmB.current}%</p>
-            <p>Ideal Moisture: {systemStatus.farmB.ideal}%</p>
-            <p>Pump Status: {systemStatus.farmB.pump ? "On" : "Off"}</p>
-          </div>
-        </div>
-      </Card>
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Farm Status</h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold">Farm A</h3>
+                  <p>Current Moisture: {systemStatus.farmA.current}%</p>
+                  <p>Ideal Moisture: {systemStatus.farmA.ideal}%</p>
+                  <p>Pump Status: {systemStatus.farmA.pump ? "On" : "Off"}</p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">Farm B</h3>
+                  <p>Current Moisture: {systemStatus.farmB.current}%</p>
+                  <p>Ideal Moisture: {systemStatus.farmB.ideal}%</p>
+                  <p>Pump Status: {systemStatus.farmB.pump ? "On" : "Off"}</p>
+                </div>
+              </div>
+            </Card>
+          </>
+        )
+      )}
     </div>
   );
 }

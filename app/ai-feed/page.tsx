@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Brain, Droplet, ThermometerSun, Leaf } from "lucide-react";
+import { Brain, Droplet, ThermometerSun, Leaf, Mountain } from "lucide-react";
 import { useGlobalConfig } from "@/app/config/globalConfig";
 
 interface Suggestion {
@@ -14,7 +14,7 @@ interface Suggestion {
 }
 
 export default function FarmWiseAIPage() {
-  const { cropNameA, cropNameB, location } = useGlobalConfig();
+  const { cropNameA, cropNameB, location, altitudeA, soilTypeA, soilTypeB } = useGlobalConfig();
 
   const plantSuggestions: Record<string, string> = {
     Tomato:
@@ -61,6 +61,21 @@ export default function FarmWiseAIPage() {
       "Harar has a warm climate. Consider intercropping to maximize soil productivity.",
   };
 
+  const altitudeSuggestions: Record<string, string> = {
+    "Low": "At low altitudes, crops like rice and sugarcane thrive due to warmer temperatures.",
+    "Moderate": "Moderate altitudes are ideal for crops like maize, wheat, and coffee.",
+    "High": "High altitudes favor crops like barley, potatoes, and certain fruits such as apples and pears.",
+  };
+
+  const soilTypeSuggestions: Record<string, string> = {
+    Sandy: "Sandy soil drains quickly, so frequent watering and organic matter are essential.",
+    Loamy: "Loamy soil is ideal for most crops. Maintain its structure by avoiding over-tilling.",
+    Clay: "Clay soil retains water well but may need amendments like sand or compost to improve drainage.",
+    Silty: "Silty soil is fertile but may compact easily. Ensure proper aeration.",
+    Peaty: "Peaty soil is acidic and rich in organic matter. Add lime to balance pH for most crops.",
+    Chalky: "Chalky soil is alkaline and drains well. Add organic material to improve fertility.",
+  };
+
   const staticSuggestions: Suggestion[] = [
     {
       id: 1,
@@ -93,8 +108,28 @@ export default function FarmWiseAIPage() {
         description: locationSuggestions[location],
         icon: ThermometerSun,
       },
-    {
+    altitudeA && {
       id: 5,
+      title: `Altitude Advisory`,
+      description: altitudeSuggestions[altitudeA > 2000 ? "High" : altitudeA > 1000 ? "Moderate" : "Low"],
+      icon: Mountain,
+    },
+    soilTypeA &&
+      soilTypeSuggestions[soilTypeA] && {
+        id: 6,
+        title: `Soil Advisory for Farm A`,
+        description: soilTypeSuggestions[soilTypeA],
+        icon: Leaf,
+      },
+    soilTypeB &&
+      soilTypeSuggestions[soilTypeB] && {
+        id: 7,
+        title: `Soil Advisory for Farm B`,
+        description: soilTypeSuggestions[soilTypeB],
+        icon: Leaf,
+      },
+    {
+      id: 8,
       title: "Soil Health Check",
       description:
         "Maintain soil quality by adding organic matter and monitoring pH levels regularly to ensure healthy plant growth.",
@@ -111,7 +146,7 @@ export default function FarmWiseAIPage() {
     );
     setSuggestions([...staticSuggestions, ...shuffledVariableSuggestions]);
     setLoading(false);
-  }, [cropNameA, cropNameB, location]);
+  }, [cropNameA, cropNameB, location, altitudeA, soilTypeA, soilTypeB]);
 
   useEffect(() => {
     // Only load the chatbot script for this page
